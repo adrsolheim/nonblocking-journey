@@ -1,0 +1,29 @@
+services:
+  web:
+    container_name: web
+    build: ./we-no-block
+    restart: on-failure
+    ports:
+      - 8080:8080
+    depends_on:
+      - web_db
+    environment:
+      DATABASE_HOST: web_db
+      DB_USER: web
+      DB_PASS: web
+
+  web_db:
+    container_name: web_db
+    image: mariadb:10.11
+    ports:
+      - 3306:3306
+    environment:
+      MARIADB_USER: web
+      MARIADB_PASSWORD: web
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: web
+    command: --default-storage-engine innodb
+    restart: always
+    volumes:
+      - ./web_db/data:/var/lib/mysql
+      - ./web_db/scripts:/docker-entrypoint-initdb.d
