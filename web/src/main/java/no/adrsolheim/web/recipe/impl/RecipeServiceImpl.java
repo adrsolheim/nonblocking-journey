@@ -1,5 +1,6 @@
 package no.adrsolheim.web.recipe.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import no.adrsolheim.web.recipe.RecipeRepository;
 import no.adrsolheim.web.recipe.RecipeService;
 import no.adrsolheim.web.recipe.domain.Recipe;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 public class RecipeServiceImpl implements RecipeService {
 
@@ -18,7 +20,8 @@ public class RecipeServiceImpl implements RecipeService {
 
     @Override
     public Mono<Recipe> get(Long id) {
-        return recipeRepository.findById(id);
+        return recipeRepository.findById(id)
+                .doOnNext(r -> log.info("Found recipe in database: {} ", r));
     }
 
     @Override
