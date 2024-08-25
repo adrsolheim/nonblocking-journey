@@ -1,5 +1,8 @@
 package no.adrsolheim.web.external;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +36,8 @@ public class ExternalController {
                 .accept(MediaType.APPLICATION_JSON)
                 .acceptCharset(StandardCharsets.UTF_8)
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToMono(String.class)
+                .map(this::toUuid);
     }
 
     @GetMapping("/delay/{seconds}")
@@ -45,5 +49,15 @@ public class ExternalController {
                 .acceptCharset(StandardCharsets.UTF_8)
                 .retrieve()
                 .bodyToMono(String.class);
+    }
+
+    private String toUuid(String json) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            JsonNode jsonNode = objectMapper.readTree(json);
+            return jsonNode.get("uuid").asText();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
