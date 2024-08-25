@@ -24,7 +24,10 @@ public class RecipeServiceImpl implements RecipeService {
     public Mono<Recipe> get(Long id) {
         return recipeRepository.findById(id)
                 .delayUntil(this::logAfterFetch)
-                .delayUntil(this::publishEvent);
+                .delayUntil(r -> publishEvent(r).onErrorResume(ex -> {
+                        log.error("Failed to publish event. Ignoring error: ", ex);
+                        return Mono.empty();
+                }));
 
     }
 
@@ -55,6 +58,12 @@ public class RecipeServiceImpl implements RecipeService {
 
     private Mono<Void> publishEvent(Recipe r) {
         return Mono.just(r)
+                .map(rcp -> {
+                    if (rcp.getId() == 100002) {
+                        throw new RuntimeException("This recipe throws random exceptions");
+                    }
+                    return rcp;
+                })
                 .delayElement(Duration.ofSeconds(2))
                 .doOnNext(e -> log.info("published event {}", e))
                 .then();
