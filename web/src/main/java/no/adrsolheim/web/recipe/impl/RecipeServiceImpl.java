@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+
 @Slf4j
 @Service
 public class RecipeServiceImpl implements RecipeService {
@@ -21,7 +23,9 @@ public class RecipeServiceImpl implements RecipeService {
     @Override
     public Mono<Recipe> get(Long id) {
         return recipeRepository.findById(id)
-                .doOnNext(r -> log.info("Found recipe in database: {} ", r));
+                .delayUntil(this::logAfterFetch)
+                .delayUntil(this::publishEvent);
+
     }
 
     @Override
@@ -43,4 +47,17 @@ public class RecipeServiceImpl implements RecipeService {
     public Mono<Long> delete(Long id) {
         return null;
     }
+
+    private Mono<Void> logAfterFetch(Recipe r) {
+        log.info("Fetched entity from database {}", r);
+        return Mono.empty();
+    }
+
+    private Mono<Void> publishEvent(Recipe r) {
+        return Mono.just(r)
+                .delayElement(Duration.ofSeconds(2))
+                .doOnNext(e -> log.info("published event {}", e))
+                .then();
+    }
 }
+
