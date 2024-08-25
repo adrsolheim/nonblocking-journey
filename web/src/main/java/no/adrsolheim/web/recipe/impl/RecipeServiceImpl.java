@@ -9,6 +9,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.NoSuchElementException;
 
 @Slf4j
 @Service
@@ -23,6 +24,7 @@ public class RecipeServiceImpl implements RecipeService {
     @Override
     public Mono<Recipe> get(Long id) {
         return recipeRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NoSuchElementException("Recipe "+id+" could not be found")))
                 .delayUntil(this::logAfterFetch)
                 .delayUntil(r -> publishEvent(r).onErrorResume(ex -> {
                         log.error("Failed to publish event. Ignoring error: ", ex);
