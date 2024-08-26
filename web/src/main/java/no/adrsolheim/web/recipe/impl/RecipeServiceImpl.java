@@ -25,32 +25,33 @@ public class RecipeServiceImpl implements RecipeService {
     public Mono<Recipe> get(Long id) {
         return recipeRepository.findById(id)
                 .switchIfEmpty(Mono.error(new NoSuchElementException("Recipe "+id+" could not be found")))
-                .delayUntil(this::logAfterFetch)
                 .delayUntil(r -> publishEvent(r).onErrorResume(ex -> {
                         log.error("Failed to publish event. Ignoring error: ", ex);
                         return Mono.empty();
-                }));
+                }))
+                .doOnSubscribe(s -> log.info("Fetching recipe {}", id))
+                .doOnSuccess(this::logAfterFetch);
 
     }
 
     @Override
     public Flux<Recipe> getByBrewfatherId(String id) {
-        return null;
+        return recipeRepository.findByBrewfatherId(id);
     }
 
     @Override
     public Flux<Recipe> getAll() {
-        return null;
+        return recipeRepository.findAll();
     }
 
     @Override
     public Mono<Long> count() {
-        return null;
+        return recipeRepository.count();
     }
 
     @Override
     public Mono<Long> delete(Long id) {
-        return null;
+        return recipeRepository.deleteById(id).then(Mono.just(id));
     }
 
     private Mono<Void> logAfterFetch(Recipe r) {
