@@ -1,12 +1,14 @@
 package no.adrsolheim.web.recipe;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
@@ -58,5 +60,10 @@ public class MixController {
         } catch (InterruptedException e) {
             return Mono.error(e);
         }
+    }
+
+    @GetMapping(path = "/infinite", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<Long> infinite() {
+        return Flux.interval(Duration.ofSeconds(1));
     }
 }
